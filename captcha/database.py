@@ -8,12 +8,12 @@ from flask_caching import Cache
 
 
 def get_db():
-    """Connect to the application's configured database. The connection
+    """Connect to the application"s configured database. The connection
     is unique for each request and will be reused if this is called
     again.
     """
-    if 'db' not in g:
-        client = MongoClient(current_app.config['DATABASE'])
+    if "db" not in g:
+        client = MongoClient(current_app.config["DATABASE"])
         g.db = client.captche_app_database
 
     return g.db
@@ -23,7 +23,7 @@ def close_db(e=None):
     """If this request connected to the database, close the
     connection.
     """
-    db = g.pop('db', None)
+    db = g.pop("db", None)
 
     if db is not None:
         db.close()
@@ -36,7 +36,7 @@ def add_index():
 
 def get_cache():
     # connect with the caching layer
-    if 'cache' not in g:
+    if "cache" not in g:
         cache = Cache(current_app)
         g.cache = cache
 
@@ -45,17 +45,18 @@ def get_cache():
 
 def clear_cache():
     # clear the cache
-    cache = g.pop('cache', None)
+    cache = g.pop("cache", None)
 
     if cache is not None:
         cache.clear()
 
-@click.command('add-db-index')
+
+@click.command("add-db-index")
 @with_appcontext
 def add_db_index():
     """Clear existing data and create new tables."""
     add_index()
-    click.echo('Added the database index on email.')
+    click.echo("Added the database index on email.")
 
 
 def init_app(app):
