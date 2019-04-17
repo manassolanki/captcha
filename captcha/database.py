@@ -4,6 +4,7 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 from pymongo import MongoClient
+from flask_caching import Cache
 
 
 def get_db():
@@ -33,6 +34,22 @@ def add_index():
     get_db().users.createIndex({"email": 1}, {"unique": True})
 
 
+def get_cache():
+    # connect with the caching layer
+    if 'cache' not in g:
+        cache = Cache(current_app)
+        g.cache = cache
+
+    return g.cache
+
+
+def clear_cache():
+    # clear the cache
+    cache = g.pop('cache', None)
+
+    if cache is not None:
+        cache.clear()
+
 @click.command('add-db-index')
 @with_appcontext
 def add_db_index():
@@ -45,5 +62,4 @@ def init_app(app):
     """Register database functions with the Flask app. This is called by
     the application factory.
     """
-    # app.teardown_appcontext(close_db)
     app.cli.add_command(add_db_index)

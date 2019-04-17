@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_caching import Cache
 
 
 def create_app(test_config=None):
@@ -11,7 +12,9 @@ def create_app(test_config=None):
         DATABASE='localhost:27017',
         SITE_VERIFY_URL='https://www.google.com/recaptcha/api/siteverify',
         SITE_SECRET='6LfC1Z4UAAAAAH10D1vOEpkUtZuNPuD7v-cyqkeX',
-        RECAPTCHA_RESPONSE_PARAM='g-recaptcha-response'
+        RECAPTCHA_RESPONSE_PARAM='g-recaptcha-response',
+        CACHE_TYPE='simple',   # Flask-Caching related configs
+        CACHE_DEFAULT_TIMEOUT=86400     # Timeout of one day
     )
 
     # ensure the instance folder exists
@@ -28,6 +31,7 @@ def create_app(test_config=None):
     # register the database connection
     from captcha import database as db
     db.init_app(app)
+    app.cache = Cache(app)
 
     # apply the blueprint to the app
     from captcha import user

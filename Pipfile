@@ -11,6 +11,7 @@ flask = "*"
 pymongo = "*"
 click = "*"
 requests = "*"
+flask-caching = "*"
 
 [requires]
 python_version = "3.7"

@@ -10,16 +10,16 @@ bp = Blueprint('user', __name__, url_prefix='/user')
 @bp.before_app_request
 def load_logged_in_user():
     # check whether the request is more than 3 for a given ip address
-    client_ip = request.environ['REMOTE_ADDR']
-    g.show_recaptcha = False
-    if hasattr(g, 'client_IPs'):
-        total_request = g.client_IPs.get(client_ip)
+    cache = current_app.cache
 
-        if total_request > 3:
-            pass
-            # introduce the capche
+    # get client ip
+    client_ip = str(request.environ['REMOTE_ADDR'])
+    client_ip_hits = cache.get(client_ip)
+    if client_ip_hits and int(client_ip_hits) > 3:
+        g.show_recaptcha = True
     else:
-        g.client_IPs = dict()
+        g.show_recaptcha = False
+
 
 
 @bp.route('/register', methods=('GET', 'POST'))
@@ -83,13 +83,15 @@ def clear_flash():
 
 def update_request_count():
     # If the client exist, update the count otherwise insert the client
-    client_ip = request.environ['REMOTE_ADDR']
-    client_exist = g.client_IPs.get(client_ip)
+    cache = current_app.cache
 
-    if not client_exist:
-        g.client_IPs[client_ip] = 1
+    # get client ip
+    client_ip = str(request.environ['REMOTE_ADDR'])
+    client_ip_hits = cache.get(client_ip)
+    if not client_ip_hits:
+        cache.set(client_ip, 1)
     else:
-        g.client_IPs[client_ip] += 1
+        cache.set(client_ip, int(client_ip_hits)+1)
 
 
 def validate_recaptcha_response(token):
