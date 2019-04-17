@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html>
 
-<body style="text-align:center;">
+<head>
+    <title>Captcha Validation</title>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script>
+        function onSubmit() {
+        document.getElementById("register-form").submit();
+        }
+    </script>
+    <style>
+        body {
+        font-family: Helvetica, sans-serif;
+        }
+        .status-message {
+        background-color: #5ff;
+        margin-bottom: 10px;
+        text-align: center;
+        }
+        textarea {
+        margin: 10px 0;
+        resize: none;
+        }
+    </style>
+</head>
+
+<body style="margin: 100px;">
 
     <h2>Register</h2>
 
-    <form action="" method="POST">
+    <form id="register-form" action="" method="POST">
         Username:<br>
         <input type="text" name="username" value="">
         <br>
@@ -15,7 +39,11 @@
         Password:<br>
         <input type="password" name="password" value="">
         <br><br>
-        <input type="submit" value="Submit">
+        {% if g.show_recaptcha %}
+            <div class="g-recaptcha" data-sitekey="6LfC1Z4UAAAAABMM3fPZF-7ePxfNea-riB--WeM7"></div>
+        {% endif %}
+        <br>
+        <input type="submit" value="Submit" data-callback="onSubmit">
     </form>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

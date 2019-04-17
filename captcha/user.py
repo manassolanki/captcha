@@ -1,5 +1,6 @@
 
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+import requests
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, current_app
 
 from captcha.database import get_db
 
@@ -10,7 +11,7 @@ bp = Blueprint('user', __name__, url_prefix='/user')
 def load_logged_in_user():
     # check whether the request is more than 3 for a given ip address
     client_ip = request.environ['REMOTE_ADDR']
-    print ("========update the google captche=========")
+    g.show_recaptcha = False
     if hasattr(g, 'client_IPs'):
         total_request = g.client_IPs.get(client_ip)
 
@@ -19,7 +20,6 @@ def load_logged_in_user():
             # introduce the capche
     else:
         g.client_IPs = dict()
-        
 
 
 @bp.route('/register', methods=('GET', 'POST'))
@@ -29,6 +29,17 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+
+        # validate captche before db hit
+        verified_flag = None
+        recaptcha_response = request.form.get(current_app.config['RECAPTCHA_RESPONSE_PARAM'])
+        if recaptcha_response:
+            verified_flag = validate_recaptcha_response(recaptcha_response)
+            if not verified_flag:
+                clear_flash()
+                flash("Recaptcha verification failed, try again")
+                return redirect(url_for('user.register'))
+
         db = get_db()
         error = None
 
@@ -53,7 +64,10 @@ def register():
             db.users.insert_one(user_details).inserted_id
             update_request_count()
             clear_flash()
-            flash("Register Successful")
+            success_message = "Registration Successful"
+            if verified_flag:
+                success_message += " with verified captcha"
+            flash(success_message)
             return redirect(url_for('user.register'))
 
         clear_flash()
@@ -76,3 +90,12 @@ def update_request_count():
         g.client_IPs[client_ip] = 1
     else:
         g.client_IPs[client_ip] += 1
+
+
+def validate_recaptcha_response(token):
+    # validate the recaptcha from the google server
+    resp = requests.post(url=current_app.config['SITE_VERIFY_URL'],
+                         data={'secret': current_app.config['SITE_SECRET'], 'response': token})
+    if resp.json().get("success"):
+        return True
+    return False
