@@ -26,4 +26,8 @@ def create_app(test_config=None):
     from captcha import database as db
     db.init_app(app)
 
+    # apply the blueprint to the app
+    from captcha import user
+    app.register_blueprint(user.bp)
+
     return app
